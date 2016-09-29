@@ -5,7 +5,9 @@ import peewee
 from scipy.spatial.distance import euclidean
 import datetime
 import matplotlib as mpl
+import matplotlib.cm as cm
 import subprocess
+from random import shuffle
 
 db = peewee.SqliteDatabase('wall.db')
 db.connect()
@@ -81,6 +83,28 @@ def best_match(l, a, b):
             best_name = wallpaper.name
     return best_name
 
+""" Return the top n matches to the given LAB color
+
+    Args:
+        l (float): the value of the l channel to match
+        a (float): the value of the a channel to match
+        b (float): the value of the b channel to match
+        n (int): the number of matches to return
+
+    Returns:
+        list of (string, float): the filenames and distances of the matches
+"""
+def top_matches(l, a, b, n):
+    matches = []
+    for wallpaper in Wallpaper.select():
+        color1 = np.asarray([l, a, b])
+        color2 = np.asarray([wallpaper.mean_l, wallpaper.mean_a, wallpaper.mean_b])
+        dist = euclidean(color1, color2)
+        matches.append((wallpaper.name, dist))
+    matches.sort(key=lambda t: t[1])
+    return matches[:n]
+
+
 """ Calculates a LAB color corresponding to a given time
 
     Args:
@@ -90,14 +114,14 @@ def best_match(l, a, b):
       numpy.ndarray: An array with shape (1,1,3) representing a single color
 """
 def color_for_time(time):
-    cm = mpl.cm.get_cmap('viridis')
+    cmap = cm.get_cmap('viridis')
     hour = time.hour
     minute = time.minute
     total = hour*60+minute
     if total > 720:
       total = 1440 - total
     index = int(round(255*total/720.))
-    color = np.asarray(cm.colors[index])
+    color = np.asarray(cmap.colors[index])
     color = color.reshape((1,1,3))
     color *= 255
     color = color.astype('uint8')
@@ -111,7 +135,18 @@ def best_match_for_time(time):
   bm = best_match(color[0,0,0], color[0,0,1], color[0,0,2])
   return bm
 
-def update_bg_now():
+def update_bg_reasonable_now():
+    now = datetime.datetime.now()
+    color = color_for_time(now)
+    matches = top_matches(color[0,0,0], color[0,0,1], color[0,0,2], 10)
+    thresh = matches[0][1]*1.10 #10% over smallest match
+    reasonable_matches = filter(lambda t: t[1]<=thresh, matches)
+    print reasonable_matches
+    shuffle(reasonable_matches)
+    set_bg(reasonable_matches[0][0])
+
+
+def update_bg_best_now():
   now = datetime.datetime.now()
   best_bg = best_match_for_time(now)
   set_bg(best_bg)
