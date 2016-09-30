@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import cv2
 import numpy as np
 import sqlite3
@@ -8,8 +9,12 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import subprocess
 from random import shuffle
+import argparse
+import glob
+import os
 
-db = peewee.SqliteDatabase('wall.db')
+db = peewee.SqliteDatabase(os.path.expanduser('~/.walltime/wall.db'))
+# db = peewee.SqliteDatabase('wall.db')
 db.connect()
 
 # Define object for db
@@ -58,6 +63,7 @@ def add_img(filename):
 def update_db(filenames):
     for filename in filenames:
         if Wallpaper.select().where(Wallpaper.name == filename).count()<1:
+            print 'Adding {} to the database'.format(filename)
             add_img(filename)
 
 """Returns the filename of the wallpaper in the DB that is the closest
@@ -150,3 +156,40 @@ def update_bg_best_now():
   now = datetime.datetime.now()
   best_bg = best_match_for_time(now)
   set_bg(best_bg)
+
+def main():
+    db.create_table(Wallpaper, True) # Create the table if it doesn't exist
+
+    parser = argparse.ArgumentParser(
+            description='''Select the most appropriate of your wallpapers based on
+                         the current time of day''')
+    parser.add_argument(
+            '-u',
+            '--update',
+            help= '''Update the database of images with the given directory. A directory
+            must be given. This will not change the wallpaper'''
+            )
+    parser.add_argument(
+            '-b',
+            '--best',
+            help = '''Whether to use the best image or not. If this flag is used,
+                    the best image will be selected. Otherwise, a reasonable one
+                    will be used'''
+            )
+
+    args = parser.parse_args()
+
+    if args.update:
+        path = args.update
+        filenames = glob.glob('{}*.jpg'.format(path)) + glob.glob('{}*.png'.format(path))
+        abs_filenames = map(os.path.abspath, filenames)
+        update_db(abs_filenames)
+        return
+    elif args.best:
+        update_bg_best_now()
+    else:
+        update_bg_reasonable_now()
+
+if __name__ == '__main__':
+    main()
+
