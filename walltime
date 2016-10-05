@@ -125,7 +125,7 @@ def color_for_time(time):
     minute = time.minute
     total = hour*60+minute
     if total > 720:
-      total = 1440 - total
+        total = 1440 - total
     index = int(round(255*total/720.))
     color = np.asarray(cmap.colors[index])
     color = color.reshape((1,1,3))
@@ -134,12 +134,12 @@ def color_for_time(time):
     return cv2.cvtColor(color, cv2.COLOR_RGB2LAB)
 
 def set_bg(filename):
-  subprocess.call(['feh', '--bg-scale', filename])
+    return subprocess.call(['feh', '--bg-scale', filename])
 
 def best_match_for_time(time):
-  color = color_for_time(time)
-  bm = best_match(color[0,0,0], color[0,0,1], color[0,0,2])
-  return bm
+    color = color_for_time(time)
+    bm = best_match(color[0,0,0], color[0,0,1], color[0,0,2])
+    return bm
 
 def update_bg_reasonable_now():
     now = datetime.datetime.now()
@@ -149,13 +149,22 @@ def update_bg_reasonable_now():
     reasonable_matches = filter(lambda t: t[1]<=thresh, matches)
     print reasonable_matches
     shuffle(reasonable_matches)
-    set_bg(reasonable_matches[0][0])
+    fail = set_bg(reasonable_matches[0][0])
+    if fail:
+        old_entry = Wallpaper.get(Wallpaper.name == reasonable_matches[0][0])
+        old_entry.delete_instance()
+        update_bg_reasonable_now()
+
 
 
 def update_bg_best_now():
-  now = datetime.datetime.now()
-  best_bg = best_match_for_time(now)
-  set_bg(best_bg)
+    now = datetime.datetime.now()
+    best_bg = best_match_for_time(now)
+    fail = set_bg(best_bg)
+    if fail:
+        old_entry = Wallpaper.get(Wallpaper.name == reasonable_matches[0][0])
+        old_entry.delete_instance()
+        update_bg_best_now()
 
 def main():
     db.create_table(Wallpaper, True) # Create the table if it doesn't exist
@@ -175,7 +184,7 @@ def main():
             help = '''Whether to use the best image or not. If this flag is used,
                     the best image will be selected. Otherwise, a reasonable one
                     will be used'''
-            )
+                    )
 
     args = parser.parse_args()
 
