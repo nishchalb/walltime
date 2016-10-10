@@ -143,6 +143,8 @@ def show_color_for_now():
     img = img.astype('uint8')
     img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
     cv2.imshow('Current Color', img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 """ Change the computer's background to the given one
     
@@ -207,10 +209,19 @@ def main():
     parser.add_argument(
             '-b',
             '--best',
+            action='store_true',
             help = '''Whether to use the best image or not. If this flag is used,
                     the best image will be selected. Otherwise, a reasonable one
                     will be used'''
                     )
+    parser.add_argument(
+            '-s',
+            '--show',
+            action='store_true',
+            help = ''' Display an image of the color for the current time
+                   '''
+                    )
+
 
     args = parser.parse_args()
 
@@ -222,6 +233,8 @@ def main():
         return
     elif args.best:
         update_bg_best_now()
+    elif args.show:
+        show_color_for_now()
     else:
         update_bg_reasonable_now()
 
