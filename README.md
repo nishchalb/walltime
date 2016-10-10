@@ -21,7 +21,7 @@ Walltime has a few dependencies. Before using it, the following python packages 
 Once the dependencies are installed, clone the repository. At this point, you can choose to either use walltime as a normal script, or you can make it work globally by adding the cloned repository to your PATH, or by moving walltime to somewhere in your path.
 
 ## Usage
-`
+```
 usage: walltime [-h] [-u UPDATE] [-b] [-s]
 
 Select the most appropriate of your wallpapers based on the current time of
@@ -37,4 +37,4 @@ optional arguments:
                         used, the best image will be selected. Otherwise, a
                         reasonable one will be used
   -s, --show            Display an image of the color for the current time
-`
+```
