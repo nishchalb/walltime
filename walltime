@@ -133,19 +133,45 @@ def color_for_time(time):
     color = color.astype('uint8')
     return cv2.cvtColor(color, cv2.COLOR_RGB2LAB)
 
+""" Show a small image of the color corresponding to the current time
+"""
+def show_color_for_now():
+    now = datetime.datetime.now()
+    color = color_for_time(now)
+    img = np.ones((128, 128, 3))
+    img = img*color
+    img = img.astype('uint8')
+    img = cv2.cvtColor(img, cv2.COLOR_LAB2BGR)
+    cv2.imshow('Current Color', img)
+
+""" Change the computer's background to the given one
+    
+    Args:
+        filename (string): the name of the file to set as the background
+"""
 def set_bg(filename):
     return subprocess.call(['feh', '--bg-scale', filename])
 
+""" Find the wallpaper that is the best match for the given time
+    
+    Args:
+        time (datetime.datetime): The time to find a match for
+
+    Returns:
+        String: the name of the file that is the best match
+"""
 def best_match_for_time(time):
     color = color_for_time(time)
     bm = best_match(color[0,0,0], color[0,0,1], color[0,0,2])
     return bm
 
+""" Change the wallpaper to one that is reasonable for the current time
+"""
 def update_bg_reasonable_now():
     now = datetime.datetime.now()
     color = color_for_time(now)
     matches = top_matches(color[0,0,0], color[0,0,1], color[0,0,2], 10)
-    thresh = matches[0][1]*1.10 #10% over smallest match
+    thresh = matches[0][1]*1.25 #25% over smallest match
     reasonable_matches = filter(lambda t: t[1]<=thresh, matches)
     print reasonable_matches
     shuffle(reasonable_matches)
@@ -155,8 +181,8 @@ def update_bg_reasonable_now():
         old_entry.delete_instance()
         update_bg_reasonable_now()
 
-
-
+""" Change the wallpaper to the best one for the current time
+"""
 def update_bg_best_now():
     now = datetime.datetime.now()
     best_bg = best_match_for_time(now)
