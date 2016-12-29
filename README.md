@@ -2,6 +2,8 @@
 
 Walltime is a system that chooses a wallpaper on your system that best matches the current time of day.
 
+![walltime preview image](walltime.png)
+
 ## Dependencies
 
 Walltime has a few dependencies. Before using it, the following python packages should also be installed:
